@@ -7,8 +7,22 @@
 </head>
 <body>
     <h1>Boozebot</h1>
+    <form class="get-stores" action="#" method="get">
+
+        <label for="store-search">Find a store</label>
+        <input id="store-search" type="text" name="store" value="">
+        <button type="submit">Go</button>
+
+    </form>
+
     <form class="store-select" action="#" method="get">
-        <input type="text" name="store" value="">
+
+        <label for="store-search">Select a store</label>
+        <select id="store-list" class="store-select" name="store_id">
+
+        </select>
+        <button type="submit">Next</button>
+
     </form>
 
     <form class="booze-select" action="#" method="get">
@@ -42,7 +56,7 @@
 </body>
 </html>
 <script type="text/javascript">
-    $('.store-select').on('submit', function(e){
+    $('.get-stores').on('submit', function(e){
         e.preventDefault();
         console.log(e);
         var lcboURL = 'https://lcboapi.com/stores?access_key=MDpkNzc5NDA2NC0wYTFhLTExZTktODBlNC01YjZjZjQ5ZWZmZWU6aEFnQkdNNGJZeWlNOHJydDhtZzBha2Fra1Zvc3BhMno1RGFq&q='+e.target[0].value;
@@ -50,8 +64,15 @@
             console.log(data);
             $.each(data.result, function(i,d){
                 console.log(i,d.name);
+                $('#store-list').append('<option value="'+d.id+'">'+d.name+'</option>')
             })
         })
+    })
+
+    $('.store-select').on('submit', function(e){
+        e.preventDefault();
+        console.log(e);
+
     })
 
     $('.booze-select').on('submit', function(e){
