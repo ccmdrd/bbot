@@ -4,6 +4,13 @@
   <meta charset="utf-8">
   <title>boozebot</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
+  <style media="screen">
+      .th{
+          height: 5em;
+      }
+  </style>
 </head>
 <body>
     <h1>Boozebot</h1>
@@ -52,15 +59,29 @@
 
         <button type="submit">Go</button>
     </form>
+    <ul id="test">
+
+    </ul>
+
+    <table id="table" class="display">
+    </table>
 
 </body>
 </html>
 <script type="text/javascript">
+
+    var lcboHost = 'https://lcboapi.com';
+    var access_key = 'access_key=MDpkNzc5NDA2NC0wYTFhLTExZTktODBlNC01YjZjZjQ5ZWZmZWU6aEFnQkdNNGJZeWlNOHJydDhtZzBha2Fra1Zvc3BhMno1RGFq';
+    var store_id;
+    var productURL;
+
     $('.get-stores').on('submit', function(e){
         e.preventDefault();
         console.log(e);
-        var lcboURL = 'https://lcboapi.com/stores?access_key=MDpkNzc5NDA2NC0wYTFhLTExZTktODBlNC01YjZjZjQ5ZWZmZWU6aEFnQkdNNGJZeWlNOHJydDhtZzBha2Fra1Zvc3BhMno1RGFq&q='+e.target[0].value;
+        var lcboURL = lcboHost+'/stores?'+access_key+'&per_page=100&q='+e.target[0].value;
         $.getJSON(lcboURL, function(data){
+            $('#store-list').empty();
+            $('#test').empty();
             console.log(data);
             $.each(data.result, function(i,d){
                 console.log(i,d.name);
@@ -71,7 +92,47 @@
 
     $('.store-select').on('submit', function(e){
         e.preventDefault();
-        console.log(e);
+
+        console.log(e.target[0].value);
+        store_id = e.target[0].value;
+        $('#test').empty();
+        var where = $('#tags-select').val().join(',');
+        var lcboURL = lcboHost+'/products?'+access_key+'&per_page=100&store_id='+store_id;
+        if (where) {
+            lcboURL+='&where='+where
+        }
+        lcboURL+='&order='+ $('#sort-select').val()+'&q='+$('#search').val();
+        if ($.fn.DataTable.isDataTable( '#table' )) {
+            $("#table").DataTable().ajax.url(lcboURL).load();
+        } else {
+            $('#table').DataTable({
+                processing: true,
+                // serverSide: true,
+                ajax: {
+                    url: lcboURL,
+                    dataSrc: 'result'
+                },
+                columns: [
+                    { data:'name' },
+                    { data:'price_in_cents' },
+                    { data:'quantity' },
+                    { data:'clearance_sale_savings_in_cents' }
+                ]
+
+            });
+        }
+        // $.getJSON(lcboURL, function(data){
+        //     console.log(data);
+        //     $('#test').empty();
+        //     $.each(data.result, function(i,d){
+        //         console.log(i,d);
+        //         var image_markup = '';
+        //         if (d.image_thumb_url) {
+        //             image_markup= '<img class="th" src="'+d.image_thumb_url+'" alt="thumbnail for product '+d.id+'">'
+        //         }
+        //         $('#test').append('<li>'+image_markup+d.name+'</li>')
+        //     })
+        // })
 
     })
 
@@ -80,5 +141,44 @@
         console.log(e);
         var where = $('#tags-select').val().join(',');
         console.log(where);
+        var lcboURL = lcboHost+'/products?'+access_key+'&per_page=100&store_id='+store_id;
+        if (where) {
+            lcboURL+='&where='+where
+        }
+        lcboURL+='&order='+ $('#sort-select').val()+'&q='+$('#search').val()
+
+        // $.getJSON(lcboURL, function(data){
+        //     console.log(data);
+        //     $('#test').empty();
+        //     $.each(data.result, function(i,d){
+        //         console.log(i,d);
+        //         var image_markup = '';
+        //         if (d.image_thumb_url) {
+        //             image_markup= '<img class="th" src="'+d.image_thumb_url+'" alt="thumbnail for product '+d.id+'">'
+        //         }
+        //         $('#test').append('<li>'+image_markup+d.name+'</li>')
+        //     })
+        // })
+        if ($.fn.DataTable.isDataTable( '#table' )) {
+            $("#table").DataTable().ajax.url(lcboURL).load();
+        } else {
+            $('#table').DataTable({
+                processing: true,
+                // serverSide: true,
+                ajax: {
+                    url: lcboURL,
+                    dataSrc: 'result'
+                },
+                columns: [
+                    { data:'name' },
+                    { data:'price_in_cents' },
+                    { data:'quantity' },
+                    { data:'clearance_sale_savings_in_cents' }
+                ]
+
+            });
+        }
+
+
     })
 </script>
