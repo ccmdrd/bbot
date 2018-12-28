@@ -3,16 +3,58 @@
 <head>
   <meta charset="utf-8">
   <title>boozebot</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 <body>
     <h1>Boozebot</h1>
-    <form class="" action="#" method="get">
-        <select class="" name="where" multiple>
+    <form class="store-select" action="#" method="get">
+        <input type="text" name="store" value="">
+    </form>
+
+    <form class="booze-select" action="#" method="get">
+        <label for="tags-select">Tags</label>
+        <select id="tags-select" class="" name="where" multiple>
+
             <option value="is_discontinued">discontinued</option>
+            <option value="has_value_added_promotion">value added promotion</option>
             <option value="has_limited_time_offer">limited time offer</option>
+            <option value="has_bonus_reward_miles">bonus reward miles</option>
+            <option value="is_seasonal">seasonal</option>
+            <option value="is_vqa">Vintners Quality Alliance</option>
+            <option value="is_ocb">Ontario producers</option>
+            <option value="is_kosher">kosher</option>
         </select>
+        <label for="sort-select">Sort</label>
+        <select id="sort-select" class="" name="order">
+            <option value="price_in_cents.asc">Price ascending</option>
+            <option value="price_in_cents.desc">Price descending</option>
+            <option value="regular_price_in_cents.asc">Regular price ascending</option>
+            <option value="regular_price_in_cents.desc">Regular price descending</option>
+            <option value="inventory_count.asc">Inventory Count ascending</option>
+            <option value="inventory_count.desc">Inventory count descending</option>
+        </select>
+        <label for="search">Search</label>
+        <input id="search" type="text" name="q" value="">
+
         <button type="submit">Go</button>
     </form>
 
 </body>
 </html>
+<script type="text/javascript">
+    $('.store-select').on('submit', function(e){
+        e.preventDefault();
+        console.log(e);
+        var lcboURL = 'http://lcboapi.com/stores?q='+e.target[0].value;
+        $.getJSON(lcboURL, function(data){
+            console.log(data);
+        })
+    })
+
+    $('.booze-select').on('submit', function(e){
+        e.preventDefault();
+        console.log(e);
+        var where = $('#tags-select').val().join(',');
+        console.log(where);
+    })
+</script>
