@@ -48,6 +48,9 @@
         var lcboURL = 'https://lcboapi.com/stores?access_key=MDpkNzc5NDA2NC0wYTFhLTExZTktODBlNC01YjZjZjQ5ZWZmZWU6aEFnQkdNNGJZeWlNOHJydDhtZzBha2Fra1Zvc3BhMno1RGFq&q='+e.target[0].value;
         $.getJSON(lcboURL, function(data){
             console.log(data);
+            $.each(data.result, function(i,d){
+                console.log(i,d.name);
+            })
         })
     })
 
