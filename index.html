@@ -59,21 +59,46 @@
 
         <button type="submit">Go</button>
     </form>
+    <div class="page-info">
+    <p>Current page: <span id="current-page">0</span></p>
+    <p>Results: <span id="results-count">0</span></p>
+    <div id="pages">
+
+    </div>
+    </div>
     <ul id="test">
 
     </ul>
 
     <table id="table" class="display">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Regular Price</th>
+                <th>Savings</th>
+                <th>Inventory Count</th>
+
+            </tr>
+        </thead>
     </table>
 
 </body>
 </html>
 <script type="text/javascript">
 
+    const formatter = new Intl.NumberFormat('en-CA', {
+      style: 'currency',
+      currency: 'CAD',
+      minimumFractionDigits: 2
+    })
+
     var lcboHost = 'https://lcboapi.com';
     var access_key = 'access_key=MDpkNzc5NDA2NC0wYTFhLTExZTktODBlNC01YjZjZjQ5ZWZmZWU6aEFnQkdNNGJZeWlNOHJydDhtZzBha2Fra1Zvc3BhMno1RGFq';
     var store_id;
     var productURL;
+    var pager;
+    var wheree=$('#tags-select').val().join(',');
 
     $('.get-stores').on('submit', function(e){
         e.preventDefault();
@@ -96,27 +121,81 @@
         console.log(e.target[0].value);
         store_id = e.target[0].value;
         $('#test').empty();
-        var where = $('#tags-select').val().join(',');
+
         var lcboURL = lcboHost+'/products?'+access_key+'&per_page=100&store_id='+store_id;
-        if (where) {
-            lcboURL+='&where='+where
+        if (typeof wheree != 'undefined') {
+            // lcboURL+='&where='+window.wheree;
         }
+        console.log(lcboURL);
         lcboURL+='&order='+ $('#sort-select').val()+'&q='+$('#search').val();
+
         if ($.fn.DataTable.isDataTable( '#table' )) {
+            console.log(lcboURL);
             $("#table").DataTable().ajax.url(lcboURL).load();
+            console.log();
         } else {
             $('#table').DataTable({
                 processing: true,
+                paging: false,
+                info:false,
+                ordering: false,
+                searching: false,
                 // serverSide: true,
                 ajax: {
                     url: lcboURL,
-                    dataSrc: 'result'
+                    dataSrc: function(json){
+                        console.log(json);
+                        console.log(json.pager)
+                        pager = json.pager;
+                        $('#current-page').text(pager.current_page);
+                        $('#results-count').text(pager.total_record_count);
+                        $('#pages').empty();
+                        for (var i = 1; i <= pager.total_pages; i++) {
+
+
+                            $('#pages').append('<a style="display:inline" class="page-nav-'+i+'" href="#" data-page="'+i+'">'+i+'</a> ');
+                        }
+                        $('.page-nav-'+pager.current_page).css('font-weight','bold')
+                        $('#pages a').on('click', function(e){
+                            e.preventDefault();
+                            console.log($(this).data('page'));
+                            $('.page-nav-'+pager.current_page).css('font-weight','regular');
+                            console.log(lcboURL+'&page='+$(this).data('page')+'&where='+wheree);
+                            $("#table").DataTable().ajax.url(lcboURL+'&page='+$(this).data('page')+'&where='+wheree).load();
+
+                        })
+
+                        return json.result;
+                    },
                 },
                 columns: [
-                    { data:'name' },
-                    { data:'price_in_cents' },
-                    { data:'quantity' },
-                    { data:'clearance_sale_savings_in_cents' }
+                    { data:'name', fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
+                        var genHTML = '';
+                            if (oData.image_thumb_url != null) {
+                                genHTML+="<img class='th' src='"+oData.image_thumb_url+"'>";
+                            } else {
+                                genHTML+="<img class='th' src='https://placehold.it/20x30'>";
+                            }
+
+                            genHTML+="<span class=''>"+sData+"</span>"
+
+                            if (oData.value_added_promotion_description != 'null' && oData.value_added_promotion_description!= null) {
+                                genHTML += '<span> +('+oData.value_added_promotion_description+')</span>';
+                            }
+                            if (oData.has_bonus_reward_miles == true) {
+                                genHTML += '<span> +('+oData.bonus_reward_miles+' reward miles)</span>';
+                            }
+
+
+                            $(nTd).html(genHTML)
+                        }
+                    },
+                    { data:'price_in_cents', render: function(data, type, row){ return formatter.format(data*0.01)} },
+                    { data:'regular_price_in_cents', render: function(data, type, row){ return formatter.format(data*0.01)} },
+                    { data:'clearance_sale_savings_in_cents', fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
+                                $(nTd).html(formatter.format((oData.regular_price_in_cents - oData.price_in_cents)*0.01));
+                        } },
+                    { data:'inventory_count' }
                 ]
 
             });
@@ -136,14 +215,13 @@
 
     })
 
+
     $('.booze-select').on('submit', function(e){
         e.preventDefault();
         console.log(e);
-        var where = $('#tags-select').val().join(',');
-        console.log(where);
         var lcboURL = lcboHost+'/products?'+access_key+'&per_page=100&store_id='+store_id;
-        if (where) {
-            lcboURL+='&where='+where
+        if (typeof wheree != 'undefined') {
+            lcboURL+='&where='+window.wheree;
         }
         lcboURL+='&order='+ $('#sort-select').val()+'&q='+$('#search').val()
 
@@ -164,21 +242,60 @@
         } else {
             $('#table').DataTable({
                 processing: true,
+                paging: false,
+                info: false,
+                ordering: false,
+                searching: false,
                 // serverSide: true,
                 ajax: {
                     url: lcboURL,
-                    dataSrc: 'result'
+                    dataSrc: function(json){
+                        console.log(json);
+                        console.log(json.pager)
+                        pager = json.pager;
+                        $('#current-page').text(pager.current_page);
+                        $('#pages').empty();
+                        for (var i = 1; i <= pager.total_pages; i++) {
+
+
+                            $('#pages').append('<a style="display:inline" class="page-nav-'+i+'" href="#" data-page="'+i+'">'+i+'</a> ');
+                        }
+                        $('.page-nav-'+pager.current_page).css('font-weight','bold')
+                        // $('#pages a').on('click', function(e){
+                        //     e.preventDefault();
+                        //     console.log($(this).data('page'));
+                        //     $('.page-nav-'+pager.current_page).css('font-weight','regular');
+                        //     $("#table").DataTable().ajax.url(lcboURL+'&page='+$(this).data('page')).load();
+                        //
+                        // })
+
+                        return json.result;
+                    },
                 },
                 columns: [
-                    { data:'name' },
-                    { data:'price_in_cents' },
-                    { data:'quantity' },
-                    { data:'clearance_sale_savings_in_cents' }
+                { data:'name', fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
+                        if (oData.image_thumb_url != null) {
+                            $(nTd).html("<img class='th' src='"+oData.image_thumb_url+"'><span class=''>"+sData+"</span>");
+                        } else {
+                            $(nTd).html("<img class='th' src='https://placehold.it/20x30'><span class=''>"+sData+"</span>");
+                        }
+                    }
+                },
+                { data:'price_in_cents', render: function(data, type, row){ return formatter.format(data*0.01)} },
+                { data:'regular_price_in_cents', render: function(data, type, row){ return formatter.format(data*0.01)} },
+                { data:'clearance_sale_savings_in_cents', fnCreatedCell: function (nTd, sData, oData, iRow, iCol) {
+                            $(nTd).html(formatter.format(oData.regular_price_in_cents - oData.price_in_cents));
+                    } },
+                { data:'inventory_count' }
                 ]
 
             });
         }
 
 
+    })
+    $('#tags-select').on('change', function(e){
+    console.log(e.target.value)
+    wheree = $(this).val().join(',');
     })
 </script>
