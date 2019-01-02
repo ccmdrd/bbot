@@ -15,11 +15,16 @@
 </head>
 <body>
     <h1>Boozebot</h1>
+
+
     <form class="get-stores" action="#" method="get">
 
         <label for="store-search">Find a store</label>
         <input id="store-search" type="text" name="store" value="">
         <button type="submit">Go</button>
+        <button onclick="getLocation()">Geolocate</button>
+
+    <p id="demo"></p>
 
     </form>
 
@@ -87,6 +92,33 @@
 </body>
 </html>
 <script type="text/javascript">
+
+var x = document.getElementById("demo");
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+  } else {
+    x.innerHTML = "Geolocation is not supported by this browser.";
+  }
+}
+
+function showPosition(position) {
+  // x.innerHTML = "Latitude: " + position.coords.latitude +
+  // "<br>Longitude: " + position.coords.longitude;
+  var lcboURL = lcboHost+'/stores?'+access_key+'&per_page=10&lat='+position.coords.latitude+'&lon='+position.coords.longitude;
+  console.log(lcboURL);
+  $.getJSON(lcboURL, function(data){
+      $('#store-list').empty();
+      $('#test').empty();
+      console.log(data);
+      $.each(data.result, function(i,d){
+          console.log(i,d.name);
+          $('#store-list').append('<option value="'+d.id+'">'+d.name+'</option>')
+      })
+  })
+
+
+}
 
     const formatter = new Intl.NumberFormat('en-CA', {
       style: 'currency',
